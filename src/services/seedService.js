@@ -1,66 +1,65 @@
 /**
- * @fileoverview Database Seed Service.
- * Automatically provisions initial 'tasks' and 'users' collections directly from React.
+ * @fileoverview Database Seed Service with realistic past dates to demonstrate overdue logic.
  */
-
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
-const SEED_TASKS = [
-  {
-    title: 'Paredes y azulejos de bacha',
-    sector: 'Bacha',
-    frequencyDays: 3,
-    assignedRole: 'Equipo Bacha',
-    assignedShift: 'AM',
-    isDowntimeTask: true
-  },
-  {
-    title: 'Desinfección de cortadoras de fiambre',
-    sector: 'Cocina',
-    frequencyDays: 1,
-    assignedRole: 'Carlos Gómez',
-    assignedShift: 'PM',
-    isDowntimeTask: false
-  },
-  {
-    title: 'Limpieza de estantes de vinos y macetas',
-    sector: 'Market',
-    frequencyDays: 7,
-    assignedRole: 'Ana Martínez',
-    assignedShift: 'AM',
-    isDowntimeTask: true
-  }
-];
-
-/**
- * Initializes Firestore collections directly from React UI.
- */
 export async function initializeFirestoreDatabase() {
-  const currentDateISO = new Date().toISOString().split('T')[0];
+  const getPastDateISO = (daysAgo) => {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().split('T')[0];
+  };
 
-  // 1. Provision 'tasks' collection
-  const tasksCollectionRef = collection(db, 'tasks');
-  for (const taskItem of SEED_TASKS) {
-    await addDoc(tasksCollectionRef, {
-      ...taskItem,
+  const seedTasks = [
+    {
+      title: 'Limpieza de paredes y azulejos de bacha',
+      sector: 'Bacha',
+      frequencyDays: 3,
+      assignedRole: 'Carlos Gómez',
+      assignedShift: 'AM',
+      isDowntimeTask: true,
+      lastCompletedAt: getPastDateISO(6), // 🚨 VENCIDA (Pasaron 6 días, frecuencia 3)
       isActive: true,
-      lastCompletedAt: currentDateISO,
-      auditLog: null,
       createdAt: new Date().toISOString()
-    });
+    },
+    {
+      title: 'Limpieza de campana, filtros y extractores',
+      sector: 'Cocina',
+      frequencyDays: 7,
+      assignedRole: 'María Rodríguez',
+      assignedShift: 'AM',
+      isDowntimeTask: true,
+      lastCompletedAt: getPastDateISO(10), // 🚨 VENCIDA / INCIDENCIA (Pasaron 10 días)
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      title: 'Desinfección de cortadoras de fiambre',
+      sector: 'Cocina',
+      frequencyDays: 1,
+      assignedRole: 'Sofía Herrera',
+      assignedShift: 'PM',
+      isDowntimeTask: false,
+      lastCompletedAt: getPastDateISO(1), // ⚠️ VENCE HOY (Frecuencia diaria y se hizo ayer)
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      title: 'Desinfección de islas y macetas de salón',
+      sector: 'Salón',
+      frequencyDays: 4,
+      assignedRole: 'Carlos Gómez',
+      assignedShift: 'AM',
+      isDowntimeTask: true,
+      lastCompletedAt: getPastDateISO(0), // ✅ REALIZADA HOY
+      isActive: true,
+      createdAt: new Date().toISOString()
+    }
+  ];
+
+  const colRef = collection(db, 'tasks');
+  for (const task of seedTasks) {
+    await addDoc(colRef, task);
   }
-
-  // 2. Provision 'users' collection
-  const defaultAdminRef = doc(db, 'users', 'admin-seed-01');
-  await setDoc(defaultAdminRef, {
-    fullName: 'Admin Koala',
-    email: 'admin@koala.com.ar',
-    role: 'admin',
-    defaultShift: 'AM',
-    isActive: true,
-    createdAt: new Date().toISOString()
-  });
-
-  return true;
 }

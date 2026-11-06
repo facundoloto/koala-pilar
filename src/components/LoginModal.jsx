@@ -42,10 +42,7 @@ export function LoginModal() {
         
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center mx-auto mb-3 shadow-lg">
-           <img src={"https://koala.com.ar/assets/Huella-blanca-sin-fdo.webp"} alt="Logo Koala" className="w-8 h-8" />
-          </div>
-          <h2 className="text-xl font-bold">Acceso a koala-pilar</h2>
+          <h2 className="text-xl font-bold">Acceso a CleanOps</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Ingresa tus credenciales para operar en el sistema
           </p>
