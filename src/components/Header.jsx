@@ -32,13 +32,8 @@ export function Header({ onOpenAdmin }) {
         
         {/* Brand & Koala Paw Vector Icon */}
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-md">
-      
-              <img src={"https://koala.com.ar/assets/Logo_Koala_Blanco_2026.webp"} alt="Logo Koala"/>
-            
-          </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-white leading-none">koala-pilar</h1>
+            <h1 className="text-lg font-bold text-slate-800 dark:text-white leading-none">CleanOps</h1>
             <span className="text-[10px] text-sky-600 dark:text-sky-300 font-medium">Control Sanitario</span>
           </div>
         </div>
