@@ -1,6 +1,6 @@
 /**
- * @fileoverview Main Application Root Component.
- * Integrates Kanban Cards, Weekly Schedule Matrix, and Historical Audit Log with Firestore.
+ * @fileoverview Main Application Root Component - CleanOps.
+ * Integrates Kanban Cards, Weekly Schedule Matrix, and Historical Audit Log.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -29,6 +29,9 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  // ==========================================
+  // 1. REGLA DE ORO DE REACT: TODOS LOS HOOKS ARRIBA
+  // ==========================================
   const { currentUser, activeShift, userDirectory } = useAuth();
   const { tasks, executions, loading, completeTask, addTask, editTask, deleteTask } = useTasks();
 
@@ -40,7 +43,7 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isDowntimeFilterActive, setIsDowntimeFilterActive] = useState(false);
 
-  // Navegación Semanal para el Cronograma (0 = Semana actual, -1 = Anterior, 1 = Siguiente)
+  // Navegación Semanal para el Cronograma (0 = Actual, -1 = Anterior, 1 = Siguiente)
   const [weekOffset, setWeekOffset] = useState(0);
 
   // Estados del Modal Admin
@@ -53,13 +56,10 @@ export default function App() {
     'Todos', 'Bacha', 'Cocina', 'Salón', 'Market', 'Pastelería', 'Baños', 'Exterior'
   ]);
 
-  // Si no hay sesión iniciada, muestra la pantalla de Login
-  if (!currentUser) return <LoginModal />;
-
-  // 1. Días correspondientes a la semana seleccionada en el cronograma
+  // Hook de cálculo: Días correspondientes a la semana visible
   const weekDays = useMemo(() => getDaysOfWeekRange(weekOffset), [weekOffset]);
 
-  // 2. Enriquecer tareas con la información calculada del semáforo/vencimiento
+  // Hook de cálculo: Enriquecer tareas con la información matemática del semáforo
   const enrichedTasks = useMemo(() => {
     return tasks.map((t) => ({
       ...t,
@@ -67,7 +67,7 @@ export default function App() {
     }));
   }, [tasks]);
 
-  // 3. Filtrar tareas por Sector, Caza de Huecos y Estado
+  // Hook de cálculo: Filtrado reactivo de tareas
   const filteredTasks = useMemo(() => {
     return enrichedTasks.filter((task) => {
       const matchSector = selectedSector === 'Todos' || task.sector === selectedSector;
@@ -75,23 +75,31 @@ export default function App() {
 
       let matchStatus = true;
       if (statusFilter === 'OVERDUE') {
-        matchStatus = task._statusInfo.status === 'OVERDUE';
+        matchStatus = task._statusInfo?.status === 'OVERDUE';
       } else if (statusFilter === 'DUE_SOON') {
-        matchStatus = task._statusInfo.status === 'DUE_TODAY' || (task._statusInfo.daysLeft <= 2 && task._statusInfo.daysLeft > 0);
+        matchStatus = task._statusInfo?.status === 'DUE_TODAY' || (task._statusInfo?.daysLeft <= 2 && task._statusInfo?.daysLeft > 0);
       } else if (statusFilter === 'COMPLETED') {
-        matchStatus = task._statusInfo.isCompletedToday;
+        matchStatus = task._statusInfo?.isCompletedToday;
       }
 
       return matchSector && matchDowntime && matchStatus;
     });
   }, [enrichedTasks, selectedSector, isDowntimeFilterActive, statusFilter]);
 
-  // Handler para Marcar Realizado (actualiza tarea y genera fila en executions)
+  // ==========================================
+  // 2. RETORNO TEMPRANO CONTROLADO (DESPUÉS DE LOS HOOKS)
+  // ==========================================
+  if (!currentUser) {
+    return <LoginModal />;
+  }
+
+  // ==========================================
+  // 3. HANDLERS Y LÓGICA DE MUTACIÓN
+  // ==========================================
   const handleCompleteTask = async (task) => {
     await completeTask(task, currentUser, activeShift);
   };
 
-  // Handler para Inicializar datos demo
   const handleSeedDatabase = async () => {
     setIsSeeding(true);
     try {
@@ -104,6 +112,9 @@ export default function App() {
     }
   };
 
+  // ==========================================
+  // 4. RENDER PRINCIPAL DE LA APP AUTENTICADA
+  // ==========================================
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors">
       <Header onOpenAdmin={() => { setEditingTaskTarget(null); setIsAdminModalOpen(true); }} />
@@ -150,7 +161,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Navegador Temporal (Visible únicamente en la vista de Cronograma) */}
+          {/* Navegador Temporal (Solo visible en Cronograma) */}
           {currentView === 'schedule' && (
             <div className="flex items-center gap-1.5 self-end sm:self-auto">
               <button
@@ -281,7 +292,7 @@ export default function App() {
 
       </main>
 
-      {/* MODAL ADMINISTRADOR (CREAR / EDITAR / USUARIOS / SECTORES) */}
+      {/* MODAL ADMINISTRADOR */}
       {isAdminModalOpen && (
         <AdminModal 
           onClose={() => { setIsAdminModalOpen(false); setEditingTaskTarget(null); }}
